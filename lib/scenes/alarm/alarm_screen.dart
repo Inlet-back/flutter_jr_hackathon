@@ -167,6 +167,15 @@ class _AlarmScreenState extends State<AlarmScreen> {
               ),
 
               Gap(0),
+              ElevatedButton(
+                onPressed: () {
+                  context.go('/game', extra: {
+                    'checkTime': 0,
+                    'gameTime': 0,
+                  });
+                },
+                child: Text('クリア画面へ'),
+              ),
             ],
           ),
         ),

@@ -221,7 +221,7 @@ class _FPSGamePageState extends ConsumerState<FPSGameTest> {
       print('モデルの読み込みに失敗しました');
       return;
     }
-    
+
     for (int i = 0; i < 300; i++) {
       // 数を半分に変更
 
@@ -277,6 +277,17 @@ class _FPSGamePageState extends ConsumerState<FPSGameTest> {
         for (int i = 0; i < stepsPerFrame; i++) {
           updateSpheres(deltaTime);
           teleportPlayerIfOob();
+          double time = threeJs.clock.elapsedTime; // 経過時間を取得
+          targets.forEach((obj) {
+            obj.position.x += math.sin(time) * 0.1;
+          });
+          playerCollisions();
+          if (playerOnFloor) {
+            playerVelocity.y = -gravity * deltaTime;
+          } else {
+            playerVelocity.y -= gravity * deltaTime;
+          }
+          playerCollider.translate(playerVelocity.scale(deltaTime));
         }
       }
     });
@@ -342,6 +353,7 @@ class _FPSGamePageState extends ConsumerState<FPSGameTest> {
 
         // 的をシーンに追加
         threeJs.scene.add(obj);
+
         // 的をオブジェクトリストに追加
       } catch (e) {
         print('Error loading target model: $e');

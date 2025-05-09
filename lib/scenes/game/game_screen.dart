@@ -18,7 +18,7 @@ class GameScreen extends ConsumerStatefulWidget {
 
 class _GameScreenState extends ConsumerState<GameScreen> {
   // final GyroController gyroController = GyroController();
-  bool isCyberMode = true; // サイバーゲームモード
+  bool isCyberMode = false; // サイバーゲームモード
   int targetCount = 0;
   int targetCountMax = 10; // 最大ターゲット数
   int gameScreenTime = 0; // ゲーム経過時間
