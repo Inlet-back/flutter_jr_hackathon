@@ -182,6 +182,7 @@ class _FPSGamePageState extends ConsumerState<FPSGameTest> {
   three.Vector3 vector3 = three.Vector3();
 
   Future<void> setup() async {
+    if (!mounted) return;
     threeJs.scene = three.Scene();
 
     // 背景を朝日の色に変更
@@ -322,6 +323,7 @@ class _FPSGamePageState extends ConsumerState<FPSGameTest> {
   }
 
   Future<void> loadTargetModel() async {
+    if (!mounted) return;
     final loader = three.OBJLoader(); // モデルのパスを設定
     final textureLoader = three.TextureLoader();
     late three.Texture texture;
