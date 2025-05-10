@@ -106,13 +106,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                         isCyberMode
                             ? FPSGameCyber(
                                 onTargetCountChanged: handleTargetCountChanged,
-                                checkTime: 0,
+                                checkTime: checkTime,
                                 gameScreenTime: gameScreenTime,
                                 targetGoal: targetGoal,
                               )
                             : FPSGameTest(
                                 onTargetCountChanged: handleTargetCountChanged,
-                                checkTime: 0,
+                                checkTime: checkTime,
                                 gameScreenTime: gameScreenTime,
                                 targetGoal: targetGoal,
                                 isMoveMode: isMoveMode,
