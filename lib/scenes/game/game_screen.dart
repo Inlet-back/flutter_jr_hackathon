@@ -24,6 +24,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   int gameScreenTime = 0; // ゲーム経過時間
   Timer? _timer;
   int targetGoal = 10; // 目標スコア
+  int resetPressCount = 0; // 強制リセットボタン
 
   @override
   void initState() {
@@ -154,6 +155,26 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 ],
               ),
             ),
+          Positioned(
+            top: 16,
+            right: 16,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 255, 113, 103)),
+              onPressed: () {
+                setState(() {
+                  resetPressCount++;
+                  if (resetPressCount >= 5) {
+                    stopGameTimer();
+                    context.go('/clear', extra: {
+                      'checkTime': checkTime,
+                      'gameTime': gameScreenTime,
+                    });
+                  }
+                });
+              },
+              child: Text('強制リセット(五回押す)'),
+            ),
+          ),
           ],
         ));
   }
