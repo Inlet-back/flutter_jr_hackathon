@@ -25,12 +25,14 @@ class FPSGameTest extends ConsumerStatefulWidget {
   final int checkTime;
   final int gameScreenTime; // ゲーム経過時間
   final int targetGoal; // 目標スコア
+  final bool isMoveMode; // 移動モード
   const FPSGameTest({
     super.key,
     required this.onTargetCountChanged,
     required this.checkTime,
     required this.gameScreenTime,
     required this.targetGoal,
+    required this.isMoveMode,
   });
 
   @override
@@ -188,30 +190,6 @@ class _FPSGamePageState extends ConsumerState<FPSGameTest> {
 // シーンに床を追加
     threeJs.scene.add(floor);
 
-    // dynamic position = floorGeometry.attributes['position'];
-    // for (int i = 0, l = position.count; i < l; i++) {
-    //   vertex.fromBuffer(position, i);
-    //   vertex.x += math.Random().nextDouble() * 20 - 10;
-    //   vertex.y += math.Random().nextDouble() * 2;
-    //   vertex.z += math.Random().nextDouble() * 20 - 10;
-    //   position.setXYZ(i, vertex.x, vertex.y, vertex.z);
-    // }
-
-    // floorGeometry = floorGeometry.toNonIndexed();
-    // position = floorGeometry.attributes['position'];
-    // final List<double> colorsFloor = [];
-    // for (int i = 0, l = position.count; i < l; i++) {
-    //   color.setHSL(math.Random().nextDouble() * 0.3 + 0.5, 0.75,
-    //       math.Random().nextDouble() * 0.25 + 0.75, three.ColorSpace.srgb);
-    //   colorsFloor.addAll([color.red, color.green, color.blue]);
-    // }
-    // floorGeometry.setAttributeFromString(
-    //     'color', three.Float32BufferAttribute.fromList(colorsFloor, 3));
-
-    // final floorMaterial =
-    //     three.MeshBasicMaterial.fromMap({'vertexColors': true});
-    // final floor = three.Mesh(floorGeometry, floorMaterial);
-    // threeJs.scene.add(floor);
 
     final loader = three.OBJLoader(); // OBJローダーを使用
 
@@ -270,6 +248,10 @@ class _FPSGamePageState extends ConsumerState<FPSGameTest> {
     //的の設置
 
     await loadTargetModel();
+    double direction = 1.0; // 移動方向（1: 右, -1: 左）
+    double speed = 4.0; // 移動速度
+    double maxDistance = 30.0; // 最大移動距離
+    Map<three.Object3D, double> initialPositions = {}; // 初期位置を記録
 
     threeJs.addAnimationEvent((dt) {
       double deltaTime = math.min(0.05, dt) / stepsPerFrame;
@@ -277,10 +259,12 @@ class _FPSGamePageState extends ConsumerState<FPSGameTest> {
         for (int i = 0; i < stepsPerFrame; i++) {
           updateSpheres(deltaTime);
           teleportPlayerIfOob();
-          double time = threeJs.clock.elapsedTime; // 経過時間を取得
-          targets.forEach((obj) {
-            obj.position.x += math.sin(time) * 0.1;
-          });
+
+          // 的の更新処理を関数で呼び出し
+          if (widget.isMoveMode) {
+            updateTargets(
+                deltaTime, initialPositions, direction, speed, maxDistance);
+          }
           playerCollisions();
           if (playerOnFloor) {
             playerVelocity.y = -gravity * deltaTime;
@@ -291,6 +275,31 @@ class _FPSGamePageState extends ConsumerState<FPSGameTest> {
         }
       }
     });
+  }
+
+  void updateTargets(
+      double deltaTime,
+      Map<three.Object3D, double> initialPositions,
+      double direction,
+      double speed,
+      double maxDistance) {
+    // 初期位置を記録（最初のフレームのみ）
+    if (initialPositions.isEmpty) {
+      for (var obj in targets) {
+        initialPositions[obj] = obj.position.x;
+      }
+    }
+
+    // 的を左右に動かす
+    for (var obj in targets) {
+      double initialX = initialPositions[obj]!;
+      obj.position.x += direction * speed * deltaTime;
+
+      // 最大移動距離に達したら方向を反転
+      if ((obj.position.x - initialX).abs() >= maxDistance) {
+        direction *= -1; // 方向を反転
+      }
+    }
   }
 
   Future<void> loadTargetModel() async {

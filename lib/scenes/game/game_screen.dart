@@ -24,6 +24,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   int gameScreenTime = 0; // ゲーム経過時間
   Timer? _timer;
   int targetGoal = 10; // 目標スコア
+  bool isMoveMode = false; // 移動モード
 
   @override
   void initState() {
@@ -41,7 +42,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       targetGoal = 20;
     } else if (difficulty == 'Hard') {
       print('HardTarget');
-      targetGoal = 30;
+      targetGoal = 20;
+      isMoveMode = true; // 移動モードを有効にする
     }
   }
 
@@ -116,6 +118,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                 checkTime: 0,
                                 gameScreenTime: gameScreenTime,
                                 targetGoal: targetGoal,
+                                isMoveMode: isMoveMode,
+
                               ),
                         Center(
                           child: Icon(
