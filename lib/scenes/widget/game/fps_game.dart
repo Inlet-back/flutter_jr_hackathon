@@ -49,11 +49,22 @@ class _FPSGamePageState extends ConsumerState<FPSGameTest> {
   List<three.Object3D> targets = [];
   int targetCount = 0;
 
+  StreamSubscription<GyroscopeEvent>? gyroscopeSubscription;
   late double radius;
 
   // ジャイロスコープのデータを保持
   double yaw = 0.0; // 水平方向の回転
   double pitch = 0.0; // 垂直方向の回転
+
+  void onPointerDown(event) {
+    // ポインターダウン時の処理
+    mouseTime = DateTime.now().millisecondsSinceEpoch;
+  }
+
+  void onPointerUp(event) {
+    // ポインターアップ時の処理
+    throwBall();
+  }
 
   @override
   void initState() {
@@ -70,53 +81,107 @@ class _FPSGamePageState extends ConsumerState<FPSGameTest> {
     threeJs = three.ThreeJS(
         onSetupComplete: () {
           if (mounted) {
-            setState(() {});
+            setState(() {
+              gyroscopeSubscription =
+                  gyroscopeEvents.listen((GyroscopeEvent event) {
+                if (mounted && threeJs.camera != null) {
+                  setState(() {
+                    yaw += event.y * 0.1; // Y軸の回転データを使用
+                    pitch += event.x * 0.1; // X軸の回転データを使用
+
+                    // カメラの回転を更新
+                    updateCameraRotation();
+                  });
+                }
+              });
+            });
           }
 
           // Keybindings
           // Add force on keydown
-          threeJs.domElement.addEventListener(three.PeripheralType.pointerdown,
-              (event) {
-            mouseTime = DateTime.now().millisecondsSinceEpoch;
-          });
-          threeJs.domElement.addEventListener(three.PeripheralType.pointerup,
-              (event) {
-            throwBall();
-          });
-          threeJs.domElement.addEventListener(three.PeripheralType.pointerHover,
-              (event) {
-            threeJs.camera.rotation.y -=
-                (event as three.WebPointerEvent).movementX / 100;
-            threeJs.camera.rotation.x -= event.movementY / 100;
-          });
+          threeJs.domElement.addEventListener(
+              three.PeripheralType.pointerdown, onPointerDown);
+          threeJs.domElement
+              .addEventListener(three.PeripheralType.pointerup, onPointerUp);
+          // threeJs.domElement.addEventListener(three.PeripheralType.pointerHover,
+          //     (event) {
+          //   threeJs.camera.rotation.y -=
+          //       (event as three.WebPointerEvent).movementX / 100;
+          //   threeJs.camera.rotation.x -= event.movementY / 100;
+          // });
         },
         setup: setup);
-
-    gyroscopeEvents.listen((GyroscopeEvent event) {
-      if (mounted) {
-        setState(() {
-          yaw += event.y * 0.1; // Y軸の回転データを使用
-          pitch += event.x * 0.1; // X軸の回転データを使用
-
-          // カメラの回転を更新
-          updateCameraRotation();
-        });
-      }
-    });
   }
 
   @override
   void dispose() {
+    print('FPSGameTest disposed');
+
+    // タイマーを停止
     timer.cancel();
-    threeJs.dispose();
-    gyroscopeEvents.drain();
-    three.loading.clear();
+    gyroscopeSubscription?.cancel();
+
+    // Three.js関連のリソースを解放
+    if (threeJs != null) {
+      for (var target in targets) {
+        if (target is three.Mesh) {
+          target.geometry?.dispose();
+          if (target.material is three.Material) {
+            (target.material as three.Material).dispose();
+          }
+          if (target.material is three.MeshStandardMaterial) {
+            final material = target.material as three.MeshStandardMaterial;
+            material.map?.dispose(); // テクスチャを解放
+          }
+        }
+        threeJs.scene.remove(target);
+      }
+      targets.clear();
+
+      for (var box in boxes) {
+        if (box is three.Mesh) {
+          box.geometry?.dispose();
+          if (box.material is three.Material) {
+            (box.material as three.Material).dispose();
+          }
+        }
+        threeJs.scene.remove(box);
+      }
+      boxes.clear();
+
+      for (var sphere in spheres) {
+        threeJs.scene.remove(sphere.mesh);
+        sphere.mesh.geometry?.dispose();
+        sphere.mesh.material?.dispose();
+      }
+      spheres.clear();
+
+      // // Three.jsのイベントリスナーを解除
+      // threeJs.domElement?.removeEventListener(
+      //     three.PeripheralType.pointerdown, onPointerDown);
+      // threeJs.domElement
+      //     ?.removeEventListener(three.PeripheralType.pointerup, onPointerUp);
+
+      // // Three.jsのアニメーションイベントを解除
+      // threeJs.events.clear();
+
+      // // Three.jsのレンダラーを解放
+      // threeJs.renderer?.dispose();
+
+      // // Three.js全体のリソースを解放
+      threeJs.dispose();
+    }
+
+    // 親クラスのdisposeを呼び出す
     super.dispose();
   }
 
   void updateCameraRotation() {
-    // カメラの回転をジャイロスコープデータに基づいて更新
-    threeJs.camera.rotation.set(pitch, yaw, 0);
+    if (threeJs.camera != null) {
+      threeJs.camera.rotation.set(pitch, yaw, 0);
+    } else {
+      print('Camera is not initialized yet.');
+    }
   }
 
   @override
@@ -134,8 +199,6 @@ class _FPSGamePageState extends ConsumerState<FPSGameTest> {
   int sphereIdx = 0;
 
   Octree worldOctree = Octree();
-  Capsule playerCollider =
-      Capsule(three.Vector3(0, 0.35, 0), three.Vector3(0, 1, 0), 0.35);
 
   three.Vector3 playerVelocity = three.Vector3();
   three.Vector3 playerDirection = three.Vector3();
@@ -190,7 +253,6 @@ class _FPSGamePageState extends ConsumerState<FPSGameTest> {
 // シーンに床を追加
     threeJs.scene.add(floor);
 
-
     final loader = three.OBJLoader(); // OBJローダーを使用
 
     // モデルを一度だけロード
@@ -200,7 +262,7 @@ class _FPSGamePageState extends ConsumerState<FPSGameTest> {
       return;
     }
 
-    for (int i = 0; i < 300; i++) {
+    for (int i = 0; i < 200; i++) {
       // 数を半分に変更
 
       try {
@@ -258,20 +320,13 @@ class _FPSGamePageState extends ConsumerState<FPSGameTest> {
       if (deltaTime != 0) {
         for (int i = 0; i < stepsPerFrame; i++) {
           updateSpheres(deltaTime);
-          teleportPlayerIfOob();
+          // teleportPlayerIfOob();
 
           // 的の更新処理を関数で呼び出し
           if (widget.isMoveMode) {
             updateTargets(
                 deltaTime, initialPositions, direction, speed, maxDistance);
           }
-          playerCollisions();
-          if (playerOnFloor) {
-            playerVelocity.y = -gravity * deltaTime;
-          } else {
-            playerVelocity.y -= gravity * deltaTime;
-          }
-          playerCollider.translate(playerVelocity.scale(deltaTime));
         }
       }
     });
@@ -400,20 +455,20 @@ class _FPSGamePageState extends ConsumerState<FPSGameTest> {
     sphere.velocity.setFrom(playerDirection).scale(fixedSpeed); // 一定速度で設定
   }
 
-  void playerCollisions() {
-    OctreeData? result = worldOctree.capsuleIntersect(playerCollider);
-    playerOnFloor = false;
-    if (result != null) {
-      playerOnFloor = result.normal.y > 0;
-      if (!playerOnFloor) {
-        playerVelocity.addScaled(
-            result.normal, -result.normal.dot(playerVelocity));
-      }
-      if (result.depth > 0.02) {
-        playerCollider.translate(result.normal.scale(result.depth));
-      }
-    }
-  }
+  // void playerCollisions() {
+  //   OctreeData? result = worldOctree.capsuleIntersect(playerCollider);
+  //   playerOnFloor = false;
+  //   if (result != null) {
+  //     playerOnFloor = result.normal.y > 0;
+  //     if (!playerOnFloor) {
+  //       playerVelocity.addScaled(
+  //           result.normal, -result.normal.dot(playerVelocity));
+  //     }
+  //     if (result.depth > 0.02) {
+  //       playerCollider.translate(result.normal.scale(result.depth));
+  //     }
+  //   }
+  // }
 
   void spheresCollisions() {
     for (int i = 0, length = spheres.length; i < length; i++) {
@@ -522,13 +577,13 @@ class _FPSGamePageState extends ConsumerState<FPSGameTest> {
     return playerDirection;
   }
 
-  void teleportPlayerIfOob() {
-    if (threeJs.camera.position.y <= -25) {
-      playerCollider.start.setValues(0, 0.35, 0);
-      playerCollider.end.setValues(0, 1, 0);
-      playerCollider.radius = 0.35;
-      threeJs.camera.position.setFrom(playerCollider.end);
-      threeJs.camera.rotation.set(0, 0, 0);
-    }
-  }
+  // void teleportPlayerIfOob() {
+  //   if (threeJs.camera.position.y <= -25) {
+  //     playerCollider.start.setValues(0, 0.35, 0);
+  //     playerCollider.end.setValues(0, 1, 0);
+  //     playerCollider.radius = 0.35;
+  //     threeJs.camera.position.setFrom(playerCollider.end);
+  //     threeJs.camera.rotation.set(0, 0, 0);
+  //   }
+  // }
 }

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_jr_hackathon/provider/difficulty_provider.dart';
 import 'package:flutter_jr_hackathon/scenes/widget/game/fps_cyber.dart';
 import 'package:flutter_jr_hackathon/scenes/widget/game/fps_game.dart';
-import 'package:flutter_jr_hackathon/utils/game/gyro/gyro_calc.dart';
 import 'package:flutter_jr_hackathon/scenes/widget/timer/timer_widget.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,7 +16,6 @@ class GameScreen extends ConsumerStatefulWidget {
 }
 
 class _GameScreenState extends ConsumerState<GameScreen> {
-  // final GyroController gyroController = GyroController();
   bool isCyberMode = false; // サイバーゲームモード
   int targetCount = 0;
   int targetCountMax = 10; // 最大ターゲット数
@@ -29,7 +27,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   @override
   void initState() {
     super.initState();
-    // gyroController.initGyro();
+
     startGameTimer(); // ゲームタイマーを開始
 
     final difficulty = ref.read(difficultyNotifierProvider);
@@ -50,7 +48,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // gyroController.generateMultipleTargets(context, targetCount);
   }
 
   void startGameTimer() {
@@ -74,6 +71,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   @override
   void dispose() {
     _timer?.cancel(); // メモリリークを防ぐためにタイマーをキャンセル
+
     super.dispose();
   }
 
@@ -119,7 +117,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                 gameScreenTime: gameScreenTime,
                                 targetGoal: targetGoal,
                                 isMoveMode: isMoveMode,
-
                               ),
                         Center(
                           child: Icon(
