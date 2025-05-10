@@ -118,10 +118,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                 isMoveMode: isMoveMode,
                               ),
                         Center(
-                          child: Icon(
-                            Icons.adjust,
-                            size: 60,
-                            color: Colors.blue,
+                          child: SizedBox(
+                            width: 80,
+                            height: 80,
+                            child: Image.asset(
+                                'assets/images/aim-svgrepo-com.png'),
                           ),
                         ),
                       ],
@@ -130,13 +131,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.adjust,
-                        size: 32,
-                        color: Colors.amber,
+                      SizedBox(
+                        width: 50,
+                        height: 50,
+                        child: Image.asset(
+                            'assets/images/target-05-svgrepo-com.png'),
                       ),
                       Text(
-                        '×score ${targetCount}/$targetGoal',
+                        '${targetCount}/$targetGoal',
                         style: TextStyle(fontSize: 32),
                       ),
                     ],
