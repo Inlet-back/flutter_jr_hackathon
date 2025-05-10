@@ -172,9 +172,9 @@ class _EditAlarmScreenState extends ConsumerState<EditAlarmScreen> {
                 child: Text(
                   'キャンセル',
                   style: TextStyle(
-                    color: Colors.blueAccent,
-                    fontSize: 15,
-                  ),
+                      color: Colors.blueAccent,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold),
                 ),
               ),
               TextButton(
@@ -185,6 +185,8 @@ class _EditAlarmScreenState extends ConsumerState<EditAlarmScreen> {
                         '保存',
                         style: TextStyle(
                           color: Colors.blueAccent,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
               ),
@@ -222,15 +224,22 @@ class _EditAlarmScreenState extends ConsumerState<EditAlarmScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('バイブレーション'),
-              CupertinoSwitch(
-                value: vibrate,
-                onChanged: (value) {
-                  setState(() {
-                    vibrate = value;
-                  });
-                },
-              ),
+              //// デフォルトでバイブレーションはon
+              // Text(
+              //   'バイブレーション',
+              //   style: TextStyle(
+              //       // fontSize: 16,
+              //       // fontWeight: FontWeight.bold,
+              //       ),
+              // ),
+              // CupertinoSwitch(
+              //   value: vibrate,
+              //   onChanged: (value) {
+              //     setState(() {
+              //       vibrate = value;
+              //     });
+              //   },
+              // ),
             ],
           ),
           Row(
@@ -303,54 +312,43 @@ class _EditAlarmScreenState extends ConsumerState<EditAlarmScreen> {
               ),
             ],
           ),
-          if (volume != null)
-            SizedBox(
-              height: 45,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Icon(
-                    volume! > 0.7
-                        ? Icons.volume_up_rounded
-                        : volume! > 0.1
-                            ? Icons.volume_down_rounded
-                            : Icons.volume_mute_rounded,
-                  ),
-                  Expanded(
-                    child: Slider(
-                      value: volume!,
-                      min: 0.1,
-                      max: 1.0,
-                      activeColor: Colors.green,
-                      onChanged: (value) {
-                        setState(() {
-                          volume = value;
-                        });
-                        print(value);
-                      },
+          AnimatedSwitcher(
+            duration: Duration(milliseconds: 200),
+            child: volume != null
+                ? SizedBox(
+                    key: ValueKey('slider'),
+                    height: 45,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Icon(
+                          volume! > 0.7
+                              ? Icons.volume_up_rounded
+                              : volume! > 0.1
+                                  ? Icons.volume_down_rounded
+                                  : Icons.volume_mute_rounded,
+                        ),
+                        Expanded(
+                          child: Slider(
+                            value: volume!,
+                            min: 0.1,
+                            max: 1.0,
+                            activeColor: Colors.green,
+                            onChanged: (value) {
+                              setState(() {
+                                volume = value;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
                     ),
+                  )
+                : SizedBox(
+                    key: ValueKey('empty'),
+                    height: 45,
                   ),
-                ],
-              ),
-            ),
-          // Text('起床の重要度'),
-          // Column(
-          //   mainAxisAlignment: MainAxisAlignment.spaceAround,
-          //   children: [
-          //     ElevatedButton(
-          //       onPressed: () {},
-          //       child: Text('初級(ゆっくり)'),
-          //     ),
-          //     ElevatedButton(
-          //       onPressed: () {},
-          //       child: Text('中級(ぼちぼち)'),
-          //     ),
-          //     ElevatedButton(
-          //       onPressed: () {},
-          //       child: Text('上級(絶対起床)'),
-          //     ),
-          //   ],
-          // ),
+          ),
           Row(),
         ],
       ),
