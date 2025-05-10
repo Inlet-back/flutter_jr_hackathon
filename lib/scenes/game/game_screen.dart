@@ -138,7 +138,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                             'assets/images/target-05-svgrepo-com.png'),
                       ),
                       Text(
-                        '${targetCount}/10',
+                        '${targetCount}/$targetGoal',
                         style: TextStyle(fontSize: 32),
                       ),
                     ],
