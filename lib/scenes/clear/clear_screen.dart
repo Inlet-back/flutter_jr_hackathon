@@ -53,8 +53,24 @@ class _ClearScreenState extends State<ClearScreen> {
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
+  String getRank(int checkTime, int gameTime) {
+    if (checkTime <= 5 && gameTime <= 30) {
+      return 'S';
+    } else if (checkTime <= 10 && gameTime <= 60) {
+      return 'A';
+    } else if (checkTime <= 20 && gameTime <= 90) {
+      return 'B';
+    } else if (checkTime <= 30 && gameTime <= 120) {
+      return 'C';
+    } else {
+      return 'D';
+    }
+  } // ランクを決定する関数
+
   @override
   Widget build(BuildContext context) {
+    final String rank = getRank(checkTime, gameTime);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('クリア！！'),
@@ -67,14 +83,14 @@ class _ClearScreenState extends State<ClearScreen> {
               children: [
                 // ランク表示
                 Text(
-                  'ランク', // ランクの文字
+                  "ランク", // ランクの文字
                   style: TextStyle(
                     fontSize: 40, // 大きなフォントサイズ
                     fontWeight: FontWeight.bold, // 太字
                   ),
                 ),
                 Text(
-                  'S', // ランクを表示
+                  rank, // ランクを表示
                   style: TextStyle(
                     fontSize: 80, // 大きなフォントサイズ
                     fontWeight: FontWeight.bold, // 太字
