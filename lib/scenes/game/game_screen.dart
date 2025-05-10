@@ -131,13 +131,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.adjust,
-                        size: 32,
-                        color: Colors.amber,
+                      Container(
+                        width: 50,
+                        height: 50,
+                        child: Image.asset(
+                            'assets/images/target-05-svgrepo-com.png'),
                       ),
                       Text(
-                        '×score ${targetCount}/$targetGoal',
+                        '${targetCount}/10',
                         style: TextStyle(fontSize: 32),
                       ),
                     ],
