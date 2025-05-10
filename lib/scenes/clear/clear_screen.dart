@@ -26,6 +26,7 @@ class _ClearScreenState extends State<ClearScreen> {
   @override
   void dispose() {
     _confettiController.dispose(); // 紙吹雪のコントローラーを破棄
+    
     super.dispose();
   }
 
