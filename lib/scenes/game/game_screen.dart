@@ -1,7 +1,7 @@
 import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_jr_hackathon/provider/difficulty_provider.dart';
-import 'package:flutter_jr_hackathon/scenes/widget/game/fps_cyber.dart';
+import 'package:flutter_jr_hackathon/scenes/widget/game/fps_game_china.dart';
 import 'package:flutter_jr_hackathon/scenes/widget/game/fps_game.dart';
 import 'package:flutter_jr_hackathon/scenes/widget/timer/timer_widget.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,7 +16,7 @@ class GameScreen extends ConsumerStatefulWidget {
 }
 
 class _GameScreenState extends ConsumerState<GameScreen> {
-  bool isCyberMode = false; // サイバーゲームモード
+  bool isChinaMode = true; // サイバーゲームモード
   int targetCount = 0;
   int targetCountMax = 10; // 最大ターゲット数
   int gameScreenTime = 0; // ゲーム経過時間
@@ -103,20 +103,21 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     flex: 3,
                     child: Stack(
                       children: [
-                        isCyberMode
-                            ? FPSGameCyber(
-                                onTargetCountChanged: handleTargetCountChanged,
-                                checkTime: checkTime,
-                                gameScreenTime: gameScreenTime,
-                                targetGoal: targetGoal,
-                              )
-                            : FPSGameTest(
-                                onTargetCountChanged: handleTargetCountChanged,
-                                checkTime: checkTime,
-                                gameScreenTime: gameScreenTime,
-                                targetGoal: targetGoal,
-                                isMoveMode: isMoveMode,
-                              ),
+                        // isChinaMode
+                        FPSGameChina(
+                          onTargetCountChanged: handleTargetCountChanged,
+                          checkTime: checkTime,
+                          gameScreenTime: gameScreenTime,
+                          targetGoal: targetGoal,
+                          isMoveMode: isMoveMode,
+                        ),
+                        // : FPSGameTest(
+                        //     onTargetCountChanged: handleTargetCountChanged,
+                        //     checkTime: checkTime,
+                        //     gameScreenTime: gameScreenTime,
+                        //     targetGoal: targetGoal,
+                        //     isMoveMode: isMoveMode,
+                        //   ),
                         Center(
                           child: Icon(
                             Icons.adjust,

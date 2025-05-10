@@ -20,24 +20,26 @@ class SphereData {
   three.Vector3 velocity;
 }
 
-class FPSGameCyber extends ConsumerStatefulWidget {
+class FPSGameChina extends ConsumerStatefulWidget {
   final ValueChanged<int> onTargetCountChanged;
   final int checkTime;
   final int gameScreenTime; // ゲーム経過時間
   final int targetGoal; // 目標スコア
-  const FPSGameCyber({
+  final bool isMoveMode; // 移動モード
+  const FPSGameChina({
     super.key,
     required this.onTargetCountChanged,
     required this.checkTime,
     required this.gameScreenTime,
     required this.targetGoal,
+    required this.isMoveMode,
   });
 
   @override
   _FPSGamePageState createState() => _FPSGamePageState();
 }
 
-class _FPSGamePageState extends ConsumerState<FPSGameCyber> {
+class _FPSGamePageState extends ConsumerState<FPSGameChina> {
   List<int> data = List.filled(60, 0, growable: true);
   late Timer timer;
   late three.ThreeJS threeJs;
@@ -47,11 +49,26 @@ class _FPSGamePageState extends ConsumerState<FPSGameCyber> {
   List<three.Object3D> targets = [];
   int targetCount = 0;
 
+  StreamSubscription<GyroscopeEvent>? gyroscopeSubscription;
   late double radius;
 
   // ジャイロスコープのデータを保持
   double yaw = 0.0; // 水平方向の回転
   double pitch = 0.0; // 垂直方向の回転
+
+  void onPointerDown(event) {
+    // ポインターダウン時の処理
+    mouseTime = DateTime.now().millisecondsSinceEpoch;
+  }
+
+  void onPointerUp(event) {
+    // ポインターアップ時の処理
+    throwBall();
+  }
+
+  List<three.Object3D> _sceneObjects = [];
+  List<three.Material> _materials = [];
+  List<three.PlaneGeometry> _geometries = [];
 
   @override
   void initState() {
@@ -68,53 +85,89 @@ class _FPSGamePageState extends ConsumerState<FPSGameCyber> {
     threeJs = three.ThreeJS(
         onSetupComplete: () {
           if (mounted) {
-            setState(() {});
+            setState(() {
+              gyroscopeSubscription =
+                  gyroscopeEvents.listen((GyroscopeEvent event) {
+                if (mounted && threeJs.camera != null) {
+                  setState(() {
+                    yaw += event.y * 0.1; // Y軸の回転データを使用
+                    pitch += event.x * 0.1; // X軸の回転データを使用
+
+                    // カメラの回転を更新
+                    updateCameraRotation();
+                  });
+                }
+              });
+            });
           }
 
           // Keybindings
           // Add force on keydown
-          threeJs.domElement.addEventListener(three.PeripheralType.pointerdown,
-              (event) {
-            mouseTime = DateTime.now().millisecondsSinceEpoch;
-          });
-          threeJs.domElement.addEventListener(three.PeripheralType.pointerup,
-              (event) {
-            throwBall();
-          });
-          threeJs.domElement.addEventListener(three.PeripheralType.pointerHover,
-              (event) {
-            threeJs.camera.rotation.y -=
-                (event as three.WebPointerEvent).movementX / 100;
-            threeJs.camera.rotation.x -= event.movementY / 100;
-          });
+          threeJs.domElement.addEventListener(
+              three.PeripheralType.pointerdown, onPointerDown);
+          threeJs.domElement
+              .addEventListener(three.PeripheralType.pointerup, onPointerUp);
         },
         setup: setup);
-
-    gyroscopeEvents.listen((GyroscopeEvent event) {
-      if (mounted) {
-        setState(() {
-          yaw += event.y * 0.1; // Y軸の回転データを使用
-          pitch += event.x * 0.1; // X軸の回転データを使用
-
-          // カメラの回転を更新
-          updateCameraRotation();
-        });
-      }
-    });
   }
 
   @override
   void dispose() {
+    print('Disposing FPSGameTest...');
+
+    // タイマーを停止
     timer.cancel();
-    threeJs.dispose();
-    gyroscopeEvents.drain();
-    three.loading.clear();
+    gyroscopeSubscription?.cancel();
+
+    // Three.js関連のリソースを解放
+    if (threeJs != null) {
+      // シーン内のオブジェクトを削除
+      for (var obj in _sceneObjects) {
+        threeJs.scene.remove(obj);
+        if (obj is three.Mesh) {
+          obj.geometry?.dispose();
+          if (obj.material is three.Material) {
+            (obj.material as three.Material).dispose();
+          }
+        }
+      }
+      _sceneObjects.clear();
+
+      // マテリアルを解放
+      for (var material in _materials) {
+        material.dispose();
+      }
+      _materials.clear();
+
+      // ジオメトリを解放
+      for (var geometry in _geometries) {
+        geometry.dispose();
+      }
+      _geometries.clear();
+
+      // Three.jsのイベントリスナーを解除
+      threeJs.events.clear();
+
+      // Three.jsのレンダラーを解放
+      threeJs.renderer?.dispose();
+
+      // Three.jsのキャッシュをクリア
+      three.loading.clear();
+
+      // Three.js全体のリソースを解放
+      threeJs.dispose();
+    }
+
     super.dispose();
+    print('End disposed');
   }
 
   void updateCameraRotation() {
-    // カメラの回転をジャイロスコープデータに基づいて更新
-    threeJs.camera.rotation.set(pitch, yaw, 0);
+    if (threeJs.camera != null) {
+      threeJs.camera.rotation.set(pitch, yaw, 0);
+    } else {
+      print('Camera is not initialized yet.');
+    }
   }
 
   @override
@@ -132,8 +185,6 @@ class _FPSGamePageState extends ConsumerState<FPSGameCyber> {
   int sphereIdx = 0;
 
   Octree worldOctree = Octree();
-  Capsule playerCollider =
-      Capsule(three.Vector3(0, 0.35, 0), three.Vector3(0, 1, 0), 0.35);
 
   three.Vector3 playerVelocity = three.Vector3();
   three.Vector3 playerDirection = three.Vector3();
@@ -153,6 +204,7 @@ class _FPSGamePageState extends ConsumerState<FPSGameCyber> {
   three.Vector3 vector3 = three.Vector3();
 
   Future<void> setup() async {
+    if (!mounted) return;
     threeJs.scene = three.Scene();
 
     // 背景を朝日の色に変更
@@ -169,10 +221,11 @@ class _FPSGamePageState extends ConsumerState<FPSGameCyber> {
     final light = three.HemisphereLight(0xffeedd, 0x777788, 0.8); // 朝日のような柔らかい光
     light.position.setValues(0.5, 1, 0.75);
     threeJs.scene.add(light);
-
+    _sceneObjects.add(light);
 // 床のジオメトリを作成
     final floorGeometry = three.PlaneGeometry(2000, 2000); // 床の大きさを設定
     floorGeometry.rotateX(-math.pi / 2); // 床を水平に配置
+    _geometries.add(floorGeometry);
 
 // 床のマテリアルを作成
     final floorMaterial = three.MeshStandardMaterial.fromMap({
@@ -181,6 +234,7 @@ class _FPSGamePageState extends ConsumerState<FPSGameCyber> {
       'metalness': 0.0, // 金属感をなくす
     });
 
+    _materials.add(floorMaterial);
 // 床のメッシュを作成
     final floor = three.Mesh(floorGeometry, floorMaterial);
     floor.receiveShadow = true; // 床が影を受け取るように設定
@@ -188,30 +242,7 @@ class _FPSGamePageState extends ConsumerState<FPSGameCyber> {
 // シーンに床を追加
     threeJs.scene.add(floor);
 
-    // dynamic position = floorGeometry.attributes['position'];
-    // for (int i = 0, l = position.count; i < l; i++) {
-    //   vertex.fromBuffer(position, i);
-    //   vertex.x += math.Random().nextDouble() * 20 - 10;
-    //   vertex.y += math.Random().nextDouble() * 2;
-    //   vertex.z += math.Random().nextDouble() * 20 - 10;
-    //   position.setXYZ(i, vertex.x, vertex.y, vertex.z);
-    // }
-
-    // floorGeometry = floorGeometry.toNonIndexed();
-    // position = floorGeometry.attributes['position'];
-    // final List<double> colorsFloor = [];
-    // for (int i = 0, l = position.count; i < l; i++) {
-    //   color.setHSL(math.Random().nextDouble() * 0.3 + 0.5, 0.75,
-    //       math.Random().nextDouble() * 0.25 + 0.75, three.ColorSpace.srgb);
-    //   colorsFloor.addAll([color.red, color.green, color.blue]);
-    // }
-    // floorGeometry.setAttributeFromString(
-    //     'color', three.Float32BufferAttribute.fromList(colorsFloor, 3));
-
-    // final floorMaterial =
-    //     three.MeshBasicMaterial.fromMap({'vertexColors': true});
-    // final floor = three.Mesh(floorGeometry, floorMaterial);
-    // threeJs.scene.add(floor);
+    _sceneObjects.add(floor);
 
     final loader = three.OBJLoader(); // OBJローダーを使用
 
@@ -222,7 +253,7 @@ class _FPSGamePageState extends ConsumerState<FPSGameCyber> {
       return;
     }
 
-    for (int i = 0; i < 300; i++) {
+    for (int i = 0; i < 200; i++) {
       // 数を半分に変更
 
       try {
@@ -249,12 +280,13 @@ class _FPSGamePageState extends ConsumerState<FPSGameCyber> {
               math.Random().nextDouble() * 0.4 + 0.5, // 明度 (明るめの色)
             );
 
-            // マテリアルに色を適用
-            child.material = three.MeshStandardMaterial.fromMap({
+            final material = three.MeshStandardMaterial.fromMap({
               'color': lanternColor,
-              'emissive': lanternColor, // 自発光色を設定
-              'emissiveIntensity': 0.5, // 自発光の強さ
+              'emissive': lanternColor,
+              'emissiveIntensity': 0.5,
             });
+            child.material = material;
+            _materials.add(material); // リソースを追跡
 
             child.castShadow = true;
             child.receiveShadow = true;
@@ -262,27 +294,64 @@ class _FPSGamePageState extends ConsumerState<FPSGameCyber> {
         });
         // シーンに追加
         threeJs.scene.add(obj);
+        _sceneObjects.add(obj); // リソースを追跡
         boxes.add(obj); // 的リストに追加
       } catch (e) {
         print('Error loading target model: $e');
       }
     }
-    //的の設置
+    // 的の設置
 
     await loadTargetModel();
+    double direction = 1.0; // 移動方向（1: 右, -1: 左）
+    double speed = 4.0; // 移動速度
+    double maxDistance = 30.0; // 最大移動距離
+    Map<three.Object3D, double> initialPositions = {}; // 初期位置を記録
 
     threeJs.addAnimationEvent((dt) {
       double deltaTime = math.min(0.05, dt) / stepsPerFrame;
       if (deltaTime != 0) {
         for (int i = 0; i < stepsPerFrame; i++) {
           updateSpheres(deltaTime);
-          teleportPlayerIfOob();
+          // teleportPlayerIfOob();
+
+          // 的の更新処理を関数で呼び出し
+          if (widget.isMoveMode) {
+            updateTargets(
+                deltaTime, initialPositions, direction, speed, maxDistance);
+          }
         }
       }
     });
   }
 
+  void updateTargets(
+      double deltaTime,
+      Map<three.Object3D, double> initialPositions,
+      double direction,
+      double speed,
+      double maxDistance) {
+    // 初期位置を記録（最初のフレームのみ）
+    if (initialPositions.isEmpty) {
+      for (var obj in targets) {
+        initialPositions[obj] = obj.position.x;
+      }
+    }
+
+    // 的を左右に動かす
+    for (var obj in targets) {
+      double initialX = initialPositions[obj]!;
+      obj.position.x += direction * speed * deltaTime;
+
+      // 最大移動距離に達したら方向を反転
+      if ((obj.position.x - initialX).abs() >= maxDistance) {
+        direction *= -1; // 方向を反転
+      }
+    }
+  }
+
   Future<void> loadTargetModel() async {
+    if (!mounted) return;
     final loader = three.OBJLoader(); // モデルのパスを設定
     final textureLoader = three.TextureLoader();
     late three.Texture texture;
@@ -338,10 +407,11 @@ class _FPSGamePageState extends ConsumerState<FPSGameCyber> {
           }
         });
 
-        targets.add(obj);
-
         // 的をシーンに追加
         threeJs.scene.add(obj);
+        _sceneObjects.add(obj);
+        targets.add(obj); // 追加した的をオブジェクトリストに追加
+
         // 的をオブジェクトリストに追加
       } catch (e) {
         print('Error loading target model: $e');
@@ -377,21 +447,6 @@ class _FPSGamePageState extends ConsumerState<FPSGameCyber> {
     // スフィアをカメラの方向に一定速度で飛ばす
     double fixedSpeed = 50.0; // 固定速度
     sphere.velocity.setFrom(playerDirection).scale(fixedSpeed); // 一定速度で設定
-  }
-
-  void playerCollisions() {
-    OctreeData? result = worldOctree.capsuleIntersect(playerCollider);
-    playerOnFloor = false;
-    if (result != null) {
-      playerOnFloor = result.normal.y > 0;
-      if (!playerOnFloor) {
-        playerVelocity.addScaled(
-            result.normal, -result.normal.dot(playerVelocity));
-      }
-      if (result.depth > 0.02) {
-        playerCollider.translate(result.normal.scale(result.depth));
-      }
-    }
   }
 
   void spheresCollisions() {
@@ -499,15 +554,5 @@ class _FPSGamePageState extends ConsumerState<FPSGameCyber> {
     playerDirection.normalize();
     playerDirection.cross(threeJs.camera.up);
     return playerDirection;
-  }
-
-  void teleportPlayerIfOob() {
-    if (threeJs.camera.position.y <= -25) {
-      playerCollider.start.setValues(0, 0.35, 0);
-      playerCollider.end.setValues(0, 1, 0);
-      playerCollider.radius = 0.35;
-      threeJs.camera.position.setFrom(playerCollider.end);
-      threeJs.camera.rotation.set(0, 0, 0);
-    }
   }
 }
