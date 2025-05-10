@@ -103,76 +103,40 @@ class _FPSGamePageState extends ConsumerState<FPSGameTest> {
               three.PeripheralType.pointerdown, onPointerDown);
           threeJs.domElement
               .addEventListener(three.PeripheralType.pointerup, onPointerUp);
-          // threeJs.domElement.addEventListener(three.PeripheralType.pointerHover,
-          //     (event) {
-          //   threeJs.camera.rotation.y -=
-          //       (event as three.WebPointerEvent).movementX / 100;
-          //   threeJs.camera.rotation.x -= event.movementY / 100;
-          // });
         },
         setup: setup);
   }
 
   @override
   void dispose() {
-    print('FPSGameTest disposed');
+    print('Disposing FPSGameTest...');
 
     // タイマーを停止
     timer.cancel();
     gyroscopeSubscription?.cancel();
 
-    // Three.js関連のリソースを解放
     if (threeJs != null) {
-      for (var target in targets) {
-        if (target is three.Mesh) {
-          target.geometry?.dispose();
-          if (target.material is three.Material) {
-            (target.material as three.Material).dispose();
-          }
-          if (target.material is three.MeshStandardMaterial) {
-            final material = target.material as three.MeshStandardMaterial;
-            material.map?.dispose(); // テクスチャを解放
-          }
-        }
-        threeJs.scene.remove(target);
-      }
-      targets.clear();
-
-      for (var box in boxes) {
-        if (box is three.Mesh) {
-          box.geometry?.dispose();
-          if (box.material is three.Material) {
-            (box.material as three.Material).dispose();
+      print(
+          'Number of objects in scene before dispose: ${threeJs.scene.children.length}');
+      for (var child in threeJs.scene.children.toList()) {
+        print('Disposing object: ${child.runtimeType}');
+        if (child is three.Mesh) {
+          child.geometry?.dispose();
+          if (child.material is three.Material) {
+            (child.material as three.Material).dispose();
           }
         }
-        threeJs.scene.remove(box);
+        threeJs.scene.remove(child);
       }
-      boxes.clear();
+      print(
+          'Number of objects in scene after dispose: ${threeJs.scene.children.length}');
 
-      for (var sphere in spheres) {
-        threeJs.scene.remove(sphere.mesh);
-        sphere.mesh.geometry?.dispose();
-        sphere.mesh.material?.dispose();
-      }
-      spheres.clear();
-
-      // // Three.jsのイベントリスナーを解除
-      // threeJs.domElement?.removeEventListener(
-      //     three.PeripheralType.pointerdown, onPointerDown);
-      // threeJs.domElement
-      //     ?.removeEventListener(three.PeripheralType.pointerup, onPointerUp);
-
-      // // Three.jsのアニメーションイベントを解除
-      // threeJs.events.clear();
-
-      // // Three.jsのレンダラーを解放
-      // threeJs.renderer?.dispose();
-
-      // // Three.js全体のリソースを解放
+      threeJs.events.clear();
+      threeJs.renderer?.dispose();
+      three.loading.clear();
       threeJs.dispose();
     }
 
-    // 親クラスのdisposeを呼び出す
     super.dispose();
   }
 
