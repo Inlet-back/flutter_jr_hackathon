@@ -1,6 +1,5 @@
 import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_jr_hackathon/common/themes/theme_manager.dart';
 import 'package:flutter_jr_hackathon/provider/difficulty_provider.dart';
 import 'package:flutter_jr_hackathon/scenes/widget/game/fps_cyber.dart';
 import 'package:flutter_jr_hackathon/scenes/widget/game/fps_game.dart';
@@ -10,8 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'dart:async';
 
 class GameScreen extends ConsumerStatefulWidget {
-  final ThemeManager themeManager; // ThemeManagerを受け取る
-  const GameScreen({super.key, required this.themeManager});
+  const GameScreen({super.key});
 
   @override
   _GameScreenState createState() => _GameScreenState();

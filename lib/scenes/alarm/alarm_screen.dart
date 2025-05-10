@@ -12,17 +12,16 @@ import 'package:flutter_jr_hackathon/services/notification.dart';
 import 'package:flutter_jr_hackathon/services/permission.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_jr_hackathon/common/themes/theme_manager.dart';
 
 class AlarmScreen extends StatefulWidget {
-  final ThemeManager themeManager; // ThemeManagerを受け取る
-  const AlarmScreen({super.key, required this.themeManager});
+  const AlarmScreen({super.key});
 
   @override
   State<AlarmScreen> createState() => _AlarmScreenState();
 }
 
 class _AlarmScreenState extends State<AlarmScreen> {
+  final themaColor = Colors.red;
   List<AlarmSettings> alarms = [];
   Notifications? notifications;
 
@@ -114,6 +113,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
       appBar: AppBar(
         title: const Text(
           'アラーム設定',
+          style: TextStyle(color: Colors.red), // テキストの色を赤に設定
         ),
       ),
       body: SafeArea(
@@ -154,9 +154,11 @@ class _AlarmScreenState extends State<AlarmScreen> {
                             Icon(
                               Icons.alarm_add_rounded,
                               size: 33,
+                              color: themaColor,
                             ),
                             Text(
                               '新規めざまし作成',
+                              style: TextStyle(color: Colors.red, fontSize: 18),
                             ),
                             Gap(10),
                           ],
@@ -165,22 +167,15 @@ class _AlarmScreenState extends State<AlarmScreen> {
               ),
 
               Gap(0),
-              ElevatedButton(
-                onPressed: () {
-                  widget.themeManager.setChineseTheme(); // 中国テーマに切り替え
-                  print('中国テーマに切り替え');
-                  print(widget.themeManager.currentTheme);
-                },
-                child: const Text('中国テーマに切り替え'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  widget.themeManager.setCrystalTheme(); // クリスタルテーマに切り替え
-                  print('クリスタルテーマに切り替え');
-                  print(widget.themeManager.currentTheme);
-                },
-                child: const Text('クリスタルテーマに切り替え'),
-              ),
+              // ElevatedButton(
+              //   onPressed: () {
+              //     context.go('/game', extra: {
+              //       'checkTime': 0,
+              //       'gameTime': 0,
+              //     });
+              //   },
+              //   child: Text('クリア画面へ'),
+              // ),
             ],
           ),
         ),
