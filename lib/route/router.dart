@@ -1,6 +1,5 @@
 import 'package:alarm/model/alarm_settings.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_jr_hackathon/common/themes/theme_manager.dart';
 import 'package:flutter_jr_hackathon/scenes/check/check_screen.dart';
 import 'package:flutter_jr_hackathon/scenes/clear/clear_screen.dart';
 import 'package:flutter_jr_hackathon/scenes/game/game_screen.dart';
@@ -9,14 +8,11 @@ import 'package:alarm/alarm.dart';
 import 'package:flutter_jr_hackathon/scenes/alarm/alarm_screen.dart';
 
 class AppRouter {
-  static final ThemeManager themeManager = ThemeManager();
   static final GoRouter router = GoRouter(
     routes: [
       GoRoute(
         path: '/',
-        builder: (context, state) => AlarmScreen(
-          themeManager: themeManager,
-        ),
+        builder: (context, state) => AlarmScreen(),
       ),
       GoRoute(
         path: '/check',
@@ -27,9 +23,7 @@ class AppRouter {
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?; // `extra` を取得
           final checkTime = extra?['checkTime'] ?? 0; // デフォルト値を設定
-          return GameScreen(
-            themeManager: themeManager,
-          );
+          return GameScreen();
         },
       ),
       GoRoute(
