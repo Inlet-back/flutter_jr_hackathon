@@ -131,7 +131,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
+                      SizedBox(
                         width: 50,
                         height: 50,
                         child: Image.asset(
