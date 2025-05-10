@@ -27,7 +27,9 @@ class AppRouter {
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?; // `extra` を取得
           final checkTime = extra?['checkTime'] ?? 0; // デフォルト値を設定
-          return GameScreen();
+          return GameScreen(
+            themeManager: themeManager,
+          );
         },
       ),
       GoRoute(
