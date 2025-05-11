@@ -2,7 +2,7 @@ import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_jr_hackathon/common/themes/theme_manager.dart';
 import 'package:flutter_jr_hackathon/provider/difficulty_provider.dart';
-import 'package:flutter_jr_hackathon/scenes/widget/game/fps_cyber.dart';
+import 'package:flutter_jr_hackathon/scenes/widget/game/fps_game_china.dart';
 import 'package:flutter_jr_hackathon/scenes/widget/game/fps_game.dart';
 import 'package:flutter_jr_hackathon/scenes/widget/timer/timer_widget.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,7 +18,7 @@ class GameScreen extends ConsumerStatefulWidget {
 }
 
 class _GameScreenState extends ConsumerState<GameScreen> {
-  bool isCyberMode = false; // サイバーゲームモード
+  late bool isChinaMode; // 遅延初期化
   int targetCount = 0;
   int targetCountMax = 10; // 最大ターゲット数
   int gameScreenTime = 0; // ゲーム経過時間
@@ -31,6 +31,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     super.initState();
 
     startGameTimer(); // ゲームタイマーを開始
+    isChinaMode = widget.themeManager.currentThemeName == "ChineseTheme";
 
     final difficulty = ref.read(difficultyNotifierProvider);
     print('Difficulty: $difficulty');
@@ -105,14 +106,15 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     flex: 3,
                     child: Stack(
                       children: [
-                        isCyberMode
-                            ? FPSGameCyber(
+                        isChinaMode
+                            ? FPSGameChina(
                                 onTargetCountChanged: handleTargetCountChanged,
                                 checkTime: checkTime,
                                 gameScreenTime: gameScreenTime,
                                 targetGoal: targetGoal,
+                                isMoveMode: isMoveMode,
                               )
-                            : FPSGameTest(
+                            : FPSGame(
                                 onTargetCountChanged: handleTargetCountChanged,
                                 checkTime: checkTime,
                                 gameScreenTime: gameScreenTime,
