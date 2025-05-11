@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_jr_hackathon/route/router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // 画面を縦向きに固定する
