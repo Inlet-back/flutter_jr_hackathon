@@ -5,7 +5,8 @@ class CrystalTheme {
   static ThemeData get theme {
     return ThemeData(
       colorScheme: ColorScheme.light(
-        primary: AppColors.crystalPrimary,
+        // 文字の色
+        primary: AppColors.chineseText,
         secondary: AppColors.crystalAccent,
         background: AppColors.background,
       ),
