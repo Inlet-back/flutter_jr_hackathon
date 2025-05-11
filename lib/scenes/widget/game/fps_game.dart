@@ -74,6 +74,12 @@ class _FPSGamePageState extends State<FPSGame> {
               (event) {
             throwBall();
           });
+          threeJs.domElement.addEventListener(three.PeripheralType.pointerHover,
+              (event) {
+            threeJs.camera.rotation.y -=
+                (event as three.WebPointerEvent).movementX / 100;
+            threeJs.camera.rotation.x -= event.movementY / 100;
+          });
         },
         setup: setup);
     super.initState();
@@ -213,48 +219,13 @@ class _FPSGamePageState extends State<FPSGame> {
     for (int i = 0; i < widget.targetGoal; i++) {
       await loadTargetModel();
     }
-    void updateTargets(
-        double deltaTime,
-        Map<three.Object3D, double> initialPositions,
-        double direction,
-        double speed,
-        double maxDistance) {
-      // 初期位置を記録（最初のフレームのみ）
-      if (initialPositions.isEmpty) {
-        for (var obj in targets!) {
-          initialPositions[obj] = obj.position.x;
-        }
-      }
 
-      // 的を左右に動かす
-      for (var obj in targets!) {
-        double initialX = initialPositions[obj]!;
-        obj.position.x += direction * speed * deltaTime;
-
-        // 最大移動距離に達したら方向を反転
-        if ((obj.position.x - initialX).abs() >= maxDistance) {
-          direction *= -1; // 方向を反転
-        }
-      }
-    }
-
-    double direction = 1.0; // 移動方向（1: 右, -1: 左）
-    double speed = 4.0; // 移動速度
-    double maxDistance = 30.0; // 最大移動距離
-    Map<three.Object3D, double> initialPositions = {}; // 初期位置を記録
-
-    threeJs!.addAnimationEvent((dt) {
+    threeJs.addAnimationEvent((dt) {
       double deltaTime = math.min(0.05, dt) / stepsPerFrame;
       if (deltaTime != 0) {
         for (int i = 0; i < stepsPerFrame; i++) {
           updateSpheres(deltaTime);
-          // teleportPlayerIfOob();
-
-          // 的の更新処理を関数で呼び出し
-          if (widget.isMoveMode) {
-            updateTargets(
-                deltaTime, initialPositions, direction, speed, maxDistance);
-          }
+          teleportPlayerIfOob();
         }
       }
     });
@@ -370,6 +341,21 @@ class _FPSGamePageState extends State<FPSGame> {
     sphere.velocity.setFrom(playerDirection).scale(fixedSpeed); // 一定速度で設定
   }
 
+  void playerCollisions() {
+    OctreeData? result = worldOctree.capsuleIntersect(playerCollider);
+    playerOnFloor = false;
+    if (result != null) {
+      playerOnFloor = result.normal.y > 0;
+      if (!playerOnFloor) {
+        playerVelocity.addScaled(
+            result.normal, -result.normal.dot(playerVelocity));
+      }
+      if (result.depth > 0.02) {
+        playerCollider.translate(result.normal.scale(result.depth));
+      }
+    }
+  }
+
   void spheresCollisions() {
     for (int i = 0, length = spheres.length; i < length; i++) {
       SphereData s1 = spheres[i];
@@ -432,10 +418,7 @@ class _FPSGamePageState extends State<FPSGame> {
 
     widget.onTargetCountChanged(targetCount);
     if (targetCount >= widget.targetGoal) {
-      context.go('/clear', extra: {
-        'checkTime': widget.checkTime,
-        'gameTime': widget.gameScreenTime
-      });
+      GoRouter.of(context).go('/clear');
     }
   }
 
