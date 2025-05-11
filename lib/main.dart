@@ -9,11 +9,10 @@ void main() async {
 
   // 画面を縦向きに固定する
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  
+
   // 確認ログ
   // setupLogging(showDebugLogs: true);
 
-  // アラームの初期化
   await Alarm.init();
 
   runApp(
