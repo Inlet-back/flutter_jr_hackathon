@@ -121,8 +121,8 @@ class _EditAlarmScreenState extends ConsumerState<EditAlarmScreen> {
       volumeSettings: volumeSettings,
       allowAlarmOverlap: true,
       notificationSettings: NotificationSettings(
-          title: 'Alarm Ex',
-          body: 'Your alarm ($id) is ringing',
+          title: 'タップして',
+          body: 'めざましシューティング！',
           stopButton: 'stop',
           icon: 'notification icon'),
     );
