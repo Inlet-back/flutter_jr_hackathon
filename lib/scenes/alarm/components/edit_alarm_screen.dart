@@ -3,13 +3,15 @@ import 'package:alarm/model/volume_settings.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart';
+import 'package:flutter_jr_hackathon/common/themes/theme_manager.dart';
 import 'package:flutter_jr_hackathon/provider/difficulty_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class EditAlarmScreen extends ConsumerStatefulWidget {
-  const EditAlarmScreen({super.key, this.alarmSettings});
+  const EditAlarmScreen({super.key, this.alarmSettings, required this.theme});
 
   final AlarmSettings? alarmSettings;
+  final ThemeManager theme; // ThemeManagerを受け取る
 
   @override
   ConsumerState<EditAlarmScreen> createState() => _EditAlarmScreenState();
@@ -240,6 +242,33 @@ class _EditAlarmScreenState extends ConsumerState<EditAlarmScreen> {
               //     });
               //   },
               // ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('テーマ'),
+              DropdownButton(
+                value: widget.theme.currentThemeName,
+                items: [
+                  DropdownMenuItem<String?>(
+                    value: "CrystalTheme",
+                    child: Text('クリスタル'),
+                  ),
+                  DropdownMenuItem<String?>(
+                    value: "ChineseTheme",
+                    child: Text('チャイナ'),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value == "CrystalTheme") {
+                    widget.theme.setCrystalTheme();
+                  } else if (value == "ChineseTheme") {
+                    widget.theme.setChineseTheme();
+                  }
+                  print('テーマ変更: $value');
+                },
+              ),
             ],
           ),
           Row(
