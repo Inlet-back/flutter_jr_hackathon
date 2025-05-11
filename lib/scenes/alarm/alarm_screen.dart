@@ -91,7 +91,8 @@ class _AlarmScreenState extends State<AlarmScreen> {
       builder: (context) {
         return FractionallySizedBox(
           heightFactor: 0.7,
-          child: EditAlarmScreen(alarmSettings: settings),
+          child: EditAlarmScreen(
+              alarmSettings: settings, theme: widget.themeManager),
         );
       },
     );
@@ -165,22 +166,6 @@ class _AlarmScreenState extends State<AlarmScreen> {
               ),
 
               Gap(0),
-              ElevatedButton(
-                onPressed: () {
-                  widget.themeManager.setChineseTheme(); // 中国テーマに切り替え
-                  print('中国テーマに切り替え');
-                  print(widget.themeManager.currentTheme);
-                },
-                child: const Text('中国テーマに切り替え'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  widget.themeManager.setCrystalTheme(); // クリスタルテーマに切り替え
-                  print('クリスタルテーマに切り替え');
-                  print(widget.themeManager.currentTheme);
-                },
-                child: const Text('クリスタルテーマに切り替え'),
-              ),
             ],
           ),
         ),
