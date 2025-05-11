@@ -302,21 +302,21 @@ class _EditAlarmScreenState extends ConsumerState<EditAlarmScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('起床の逼迫度'),
+              Text('めざまし'),
               DropdownButton(
                 value: gameDifficulty,
                 items: [
                   DropdownMenuItem<String?>(
                     value: "Easy",
-                    child: Text('ぼちぼち'),
+                    child: Text('ふつうに起きる'),
                   ),
                   DropdownMenuItem<String?>(
                     value: "Normal",
-                    child: Text('可能な限り'),
+                    child: Text('ちゃんと起きる'),
                   ),
                   DropdownMenuItem<String?>(
                     value: "Hard",
-                    child: Text('絶対に'),
+                    child: Text('まじで起きる'),
                   ),
                 ],
                 onChanged: (value) {
