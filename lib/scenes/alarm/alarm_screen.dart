@@ -157,6 +157,9 @@ class _AlarmScreenState extends State<AlarmScreen> {
                             ),
                             Text(
                               '新規めざまし作成',
+                              style: TextStyle(
+                                fontSize: 20,
+                              ),
                             ),
                             Gap(10),
                           ],
@@ -180,6 +183,20 @@ class _AlarmScreenState extends State<AlarmScreen> {
                   print(widget.themeManager.currentTheme);
                 },
                 child: const Text('クリスタルテーマに切り替え'),
+              ),
+              // あとで消す
+              ElevatedButton(
+                child: Text("ゲームへ"),
+                onPressed: () {
+                  context.go('/game');
+                },
+              ),
+              // あとで消す
+              ElevatedButton(
+                child: Text("確認へ"),
+                onPressed: () {
+                  context.go('/check');
+                },
               ),
             ],
           ),
