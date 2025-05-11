@@ -158,6 +158,9 @@ class _AlarmScreenState extends State<AlarmScreen> {
                             ),
                             Text(
                               '新規めざまし作成',
+                              style: TextStyle(
+                                fontSize: 20,
+                              ),
                             ),
                             Gap(10),
                           ],
