@@ -168,36 +168,6 @@ class _AlarmScreenState extends State<AlarmScreen> {
               ),
 
               Gap(0),
-              ElevatedButton(
-                onPressed: () {
-                  widget.themeManager.setChineseTheme(); // 中国テーマに切り替え
-                  print('中国テーマに切り替え');
-                  print(widget.themeManager.currentTheme);
-                },
-                child: const Text('中国テーマに切り替え'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  widget.themeManager.setCrystalTheme(); // クリスタルテーマに切り替え
-                  print('クリスタルテーマに切り替え');
-                  print(widget.themeManager.currentTheme);
-                },
-                child: const Text('クリスタルテーマに切り替え'),
-              ),
-              // あとで消す
-              ElevatedButton(
-                child: Text("ゲームへ"),
-                onPressed: () {
-                  context.go('/game');
-                },
-              ),
-              // あとで消す
-              ElevatedButton(
-                child: Text("確認へ"),
-                onPressed: () {
-                  context.go('/check');
-                },
-              ),
             ],
           ),
         ),
