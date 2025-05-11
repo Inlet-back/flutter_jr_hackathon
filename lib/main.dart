@@ -1,37 +1,32 @@
-import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_jr_hackathon/route/router.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // 画面を縦向きに固定する
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-
-  // 確認ログ
-  // setupLogging(showDebugLogs: true);
-
-  await Alarm.init();
-
-  runApp(
-    ProviderScope(
-      child: MyApp(),
-    ),
-  );
+void main() {
+  runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // テーマ変更時に再描画を強制
+    AppRouter.themeManager.addListener(() {
+      setState(() {});
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      // theme: ThemeData(
-      //   fontFamily: 'CustomFont', // アプリ全体にカスタムフォントを適用
-      // ),
-      routerConfig: AppRouter.router,
+      theme: AppRouter.themeManager.currentTheme, // 現在のテーマを適用
+      routerConfig: AppRouter.router, // GoRouterを設定
     );
   }
 }
