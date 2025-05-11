@@ -216,98 +216,124 @@ class _FPSGamePageState extends State<FPSGame> {
       boxes.add(box);
     }
     //的の設置
-    for (int i = 0; i < widget.targetGoal; i++) {
-      await loadTargetModel();
-    }
 
-    threeJs.addAnimationEvent((dt) {
+    await loadTargetModel();
+
+    double direction = 1.0; // 移動方向（1: 右, -1: 左）
+    double speed = 4.0; // 移動速度
+    double maxDistance = 30.0; // 最大移動距離
+    Map<three.Object3D, double> initialPositions = {};
+
+    threeJs!.addAnimationEvent((dt) {
       double deltaTime = math.min(0.05, dt) / stepsPerFrame;
       if (deltaTime != 0) {
         for (int i = 0; i < stepsPerFrame; i++) {
           updateSpheres(deltaTime);
-          teleportPlayerIfOob();
+          // teleportPlayerIfOob();
+
+          // 的の更新処理を関数で呼び出し
+          if (widget.isMoveMode) {
+            updateTargets(
+                deltaTime, initialPositions, direction, speed, maxDistance);
+          }
         }
       }
     });
   }
 
+  void updateTargets(
+      double deltaTime,
+      Map<three.Object3D, double> initialPositions,
+      double direction,
+      double speed,
+      double maxDistance) {
+    // 初期位置を記録（最初のフレームのみ）
+    if (initialPositions.isEmpty) {
+      for (var obj in targets!) {
+        initialPositions[obj] = obj.position.x;
+      }
+    }
+
+    // 的を左右に動かす
+    for (var obj in targets!) {
+      double initialX = initialPositions[obj]!;
+      obj.position.x += direction * speed * deltaTime;
+
+      // 最大移動距離に達したら方向を反転
+      if ((obj.position.x - initialX).abs() >= maxDistance) {
+        direction *= -1; // 方向を反転
+      }
+    }
+  }
+
   Future<void> loadTargetModel() async {
+    if (!mounted) return;
     final loader = three.OBJLoader(); // モデルのパスを設定
     final textureLoader = three.TextureLoader();
     late three.Texture texture;
     textureLoader.flipY = false;
     texture = (await textureLoader.fromAsset('assets/models/target.png'))!;
-
-    /// 思った通りの見た目にするため
-    // 色空間を明示的に設定
-    texture.encoding = three.sRGBEncoding;
-    // テクスチャのflipYを設定
-    texture.flipY = true; // 必要に応じて true または false に設定
     texture.magFilter = three.LinearFilter;
     texture.minFilter = three.LinearMipmapLinearFilter;
     texture.generateMipmaps = true;
     texture.needsUpdate = true;
     texture.flipY = true; // this flipY is only for web
-    // final materials = await mtlLoader.fromAsset('assets/models/blank.mtl');
-    // if (materials == null) {
-    //   print('Error: Blank.mtl file not found or empty.');
-    //   return;
-    // }
-    // materials!.preload(); // マテリアルを準備
 
-    // OBJLoaderにマテリアルを設定
-    // loader.setMaterials(materials);
+    final objTemplate = await loader.fromAsset('assets/models/target.obj');
+    if (objTemplate == null) {
+      print('モデルの読み込みに失敗しました');
+      return;
+    }
 
-    try {
-      // モデルを非同期でロード
-      final obj = (await loader
-          .fromAsset('assets/models/target.obj'))!; // 修正: `gltf`ではなく`obj`
-      if (obj == null) {
-        print('モデルの読み込みに失敗しました');
-        return;
+    for (int i = 0; i < widget.targetGoal; i++) {
+      try {
+        // モデルを非同期でロード
+        final obj = objTemplate.clone(true);
+
+        three.Vector3 forward = getForwardVector();
+        // 的の位置を設定
+        double randomDistance =
+            30 + math.Random().nextDouble() * 20; // 3.0から5.0のランダムな距離
+
+        three.Vector3 targetPosition = three.Vector3()
+          ..setFrom(threeJs.camera.position)
+          ..addScaled(forward, randomDistance);
+
+        // X・Y方向にランダムにオフセット
+
+        double offsetX = (math.Random().nextDouble() * 40) *
+            (math.Random().nextBool() ? 1 : -1); // -20.0 ～ 20.0
+        double offsetY = (math.Random().nextDouble() * 10 + 10); // 20.0 ～ 40.0
+        targetPosition.x += offsetX;
+        targetPosition.y += offsetY;
+
+        obj.position.setFrom(targetPosition);
+
+        obj.scale.setValues(0.1, 0.1, 0.1);
+        obj.lookAt(threeJs!.camera.position);
+
+        // 子オブジェクトをトラバースして設定
+        obj.traverse((child) {
+          if (child is three.Mesh) {
+            child.material = three.MeshStandardMaterial.fromMap({
+              'map': texture, // テクスチャを適用
+              'roughness': 0.8,
+              'metalness': 0.0,
+            });
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
+        });
+
+        // 的をシーンに追加
+        threeJs!.scene.add(obj);
+
+        targets!.add(obj); // 追加した的をオブジェクトリストに追加
+
+        // 的をオブジェクトリストに追加
+      } catch (e) {
+        print('Error loading target model: $e');
       }
-
-      three.Vector3 forward = getForwardVector();
-      // 的の位置を設定
-      double randomDistance =
-          30 + math.Random().nextDouble() * 20; // 3.0から5.0のランダムな距離
-
-      three.Vector3 targetPosition = three.Vector3()
-        ..setFrom(threeJs.camera.position)
-        ..addScaled(forward, randomDistance); // プレイヤーの前方20ユニット
-
-      // X・Y方向にランダムにオフセット
-
-      double offsetX = (math.Random().nextDouble() * 40) *
-          (math.Random().nextBool() ? 1 : -1); // -20.0 ～ 20.0
-      double offsetY = (math.Random().nextDouble() * 10 + 10); // 20.0 ～ 40.0
-      targetPosition.x += offsetX;
-      targetPosition.y += offsetY;
-
-      obj.position.setFrom(targetPosition);
-
-      obj.scale.setValues(0.1, 0.1, 0.1);
-      obj.lookAt(threeJs.camera.position);
-
-      // 子オブジェクトをトラバースして設定
-      obj.traverse((child) {
-        if (child is three.Mesh) {
-          // 外側のマテリアルを適用
-          child.material?.map = texture;
-
-          // 必要に応じて内側のマテリアルを適用
-          child.castShadow = true;
-          child.receiveShadow = true;
-        }
-      });
-
-      targets.add(obj);
-
-      // 的をシーンに追加
-      threeJs.scene.add(obj);
-      // 的をオブジェクトリストに追加
-    } catch (e) {
-      print('Error loading target model: $e');
     }
   }
 
@@ -418,7 +444,10 @@ class _FPSGamePageState extends State<FPSGame> {
 
     widget.onTargetCountChanged(targetCount);
     if (targetCount >= widget.targetGoal) {
-      GoRouter.of(context).go('/clear');
+      context.go('/clear', extra: {
+        'checkTime': widget.checkTime,
+        'gameTime': widget.gameScreenTime
+      });
     }
   }
 
