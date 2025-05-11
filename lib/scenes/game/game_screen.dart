@@ -110,7 +110,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                 gameScreenTime: gameScreenTime,
                                 targetGoal: targetGoal,
                               )
-                            : FPSGameTest(
+                            : FPSGame(
                                 onTargetCountChanged: handleTargetCountChanged,
                                 checkTime: checkTime,
                                 gameScreenTime: gameScreenTime,
